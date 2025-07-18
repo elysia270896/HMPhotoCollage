@@ -4,7 +4,7 @@ const path = require('path');
 const cors = require('cors');
 const fs = require('fs');
 const fileUpload = require('express-fileupload');
-const morgan = require('morgan');
+// const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 
@@ -33,7 +33,7 @@ app.use(fileUpload({
   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
   abortOnLimit: true
 }));
-app.use(morgan('combined'));
+// app.use(morgan('combined'));
 
 // 3. CẤU TRÚC THƯ MỤC
 const STATIC_DIR = path.join(__dirname, 'public');
