@@ -5,9 +5,34 @@ const cors = require('cors');
 const fs = require('fs');
 const fileUpload = require('express-fileupload');
 
+function validateBaseUrl(url) {
+  if (!url) return null;
+  url = url.endsWith('/') ? url.slice(0, -1) : url;
+  try {
+    new URL(url); // Kiểm tra URL hợp lệ
+    return url;
+  } catch (err) {
+    console.error('❌ Invalid BASE_URL:', url);
+    return null;
+  }
+}
+
 // Khởi tạo app
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// const validateBaseUrl = (url) => {
+//   if (!url) return null;
+//   url = url.endsWith('/') ? url.slice(0, -1) : url;
+//   try {
+//     new URL(url);
+//     return url;
+//   } catch (err) {
+//     console.error('❌ Invalid BASE_URL:', url);
+//     return null;
+//   }
+// };
+
 const BASE_URL = validateBaseUrl(process.env.BASE_URL) || `http://localhost:${PORT}`;
 
 // 1. CẤU HÌNH BẢO MẬT
