@@ -8,12 +8,13 @@ const fileUpload = require('express-fileupload');
 // Khởi tạo app
 const app = express();
 const PORT = process.env.PORT || 3000;
+const BASE_URL = validateBaseUrl(process.env.BASE_URL) || `http://localhost:${PORT}`;
 
 // 1. CẤU HÌNH BẢO MẬT
 // app.use(helmet());
 app.use(cors({
   origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
-  methods: ['GET', 'POST']
+  methods: ['GET', 'POST','PUT', 'DELETE']
 }));
 
 // Giới hạn request: 100 requests/phút
@@ -62,7 +63,10 @@ const createDataRoute = (type) => {
   return async (req, res) => {
     try {
       const filePath = path.join(STATIC_DIR, 'app', 'DPLApps', 'WeddingPhoto', type, 'data.json');
-      const data = JSON.parse(await fs.promises.readFile(filePath, 'utf-8'));
+      // const data = JSON.parse(await fs.promises.readFile(filePath, 'utf-8'));
+      const data = await fs.promises.readFile(filePath, 'utf-8').catch(err => {
+  throw new Error(`File ${filePath} not found`);
+});
       
       // Kiểm tra cấu trúc cơ bản
       if (!data.categories || !Array.isArray(data.categories)) {
@@ -89,7 +93,7 @@ app.get('/app/DPLApps/WeddingPhoto/stickers/data.json', createDataRoute('sticker
 app.get('/app/DPLApps/WeddingPhoto/template2/data.json', createDataRoute('template2'));
 
 // 4.4. File Download
-app.get('/download/:type/:file(*)', (req, res) => {
+app.get('/download/:type/:file', (req, res) => {
   const { type, file } = req.params;
   const allowedTypes = ['stickers', 'template2'];
   
@@ -110,8 +114,11 @@ app.get('/download/:type/:file(*)', (req, res) => {
 
 // 5. UPLOAD ENDPOINT (Dành cho admin)
 app.post('/upload', (req, res) => {
-  if (!req.files || !req.body.targetDir) {
-    return res.status(400).json({ error: 'Missing file or target directory' });
+  // if (!req.files || !req.body.targetDir) {
+  //   return res.status(400).json({ error: 'Missing file or target directory' });
+  // }
+  if (!req.files?.file) {  // Kiểm tra cụ thể hơn
+    return res.status(400).json({ error: 'No file uploaded' });
   }
 
   const targetDir = path.join(STATIC_DIR, req.body.targetDir);
@@ -144,17 +151,25 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error('Server Error:', err);
-  res.status(500).json({ 
-    error: 'Internal Server Error',
-    requestId: req.id
+  // console.error('Server Error:', err);
+  // res.status(500).json({ 
+  //   error: 'Internal Server Error',
+  //   requestId: req.id
+  // });
+  console.error('ERROR:', {
+    message: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+    url: req.originalUrl
   });
 });
 
 // 7. HÀM HỖ TRỢ
 async function validateData(type) {
   const filePath = path.join(STATIC_DIR, 'app', 'DPLApps', 'WeddingPhoto', type, 'data.json');
-  const data = JSON.parse(await fs.promises.readFile(filePath, 'utf-8'));
+  // const data = JSON.parse(await fs.promises.readFile(filePath, 'utf-8'));
+  const data = await fs.promises.readFile(filePath, 'utf-8').catch(err => {
+  throw new Error(`File ${filePath} not found`);
+});
 
   const result = {
     valid: true,
