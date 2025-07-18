@@ -4,9 +4,6 @@ const path = require('path');
 const cors = require('cors');
 const fs = require('fs');
 const fileUpload = require('express-fileupload');
-// const morgan = require('morgan');
-// const rateLimit = require('express-rate-limit');
-// const helmet = require('helmet');
 
 // Khởi tạo app
 const app = express();
