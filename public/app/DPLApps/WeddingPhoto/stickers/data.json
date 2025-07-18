@@ -1,0 +1,26 @@
+{
+  "categories": [
+    {
+      "category": "1",
+      "resource": [
+        {
+          "thumb": "assets/stickers/love/thumb.jpg",
+          "zip": "assets/stickers/love/pack.zip"
+        },
+        {
+          "thumb": "assets/stickers/heart/thumb.jpg",
+          "zip": "assets/stickers/heart/pack.zip"
+        }
+      ]
+    },
+    {
+      "category": "2",
+      "resource": [
+        {
+          "thumb": "assets/stickers/flower/thumb.jpg",
+          "zip": "assets/stickers/flower/pack.zip"
+        }
+      ]
+    }
+  ]
+}
