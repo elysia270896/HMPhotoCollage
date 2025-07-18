@@ -5,12 +5,12 @@
       "category": "1",
       "resource": [
         {
-          "thumb": "app/DPLApps/WeddingPhoto/template2/thumb_1_1.jpg",
-          "zip": "app/DPLApps/WeddingPhoto/template2/frame_1.zip"
+          "thumb": "app/DPLApps/WeddingPhoto/template2/thumb1.jpg",
+          "zip": "app/DPLApps/WeddingPhoto/template2/template1.zip"
         },
         {
-          "thumb": "app/DPLApps/WeddingPhoto/template2/thumb_1_2.jpg",
-          "zip": "app/DPLApps/WeddingPhoto/template2/frame_2.zip"
+          "thumb": "app/DPLApps/WeddingPhoto/template2/thumb2.jpg",
+          "zip": "app/DPLApps/WeddingPhoto/template2/template2.zip"
         }
       ]
     },
@@ -18,12 +18,8 @@
       "category": "2",
       "resource": [
         {
-          "thumb": "app/DPLApps/WeddingPhoto/template2/thumb_2_1.jpg",
-          "zip": "app/DPLApps/WeddingPhoto/template2/frame2_1.zip"
-        },
-		    {
-          "thumb": "app/DPLApps/WeddingPhoto/template2/thumb_2_2.jpg",
-          "zip": "app/DPLApps/WeddingPhoto/template2/frame2_2.zip"
+          "thumb": "app/DPLApps/WeddingPhoto/template2/thumb3.jpg",
+          "zip": "app/DPLApps/WeddingPhoto/template2/template3.zip"
         }
       ]
     }
