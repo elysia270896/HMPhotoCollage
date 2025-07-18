@@ -1,98 +1,79 @@
 require('dotenv').config();
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
-const bodyParser = require('body-parser');
-const path = require('path'); // Thêm thư viện path
+const fs = require('fs');
+
 const app = express();
+const PORT = process.env.PORT || 3000;
 
-// Cấu hình cơ bản
+// Middleware quan trọng
 app.use(cors());
-app.use(bodyParser.json());
-
-// Phục vụ file tĩnh từ thư mục public
+app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Mock data - dữ liệu mẫu
-const templates = [
-  {
-    id: 1,
-    name: "Khung ảnh cưới 1",
-    category: "wedding",
-    thumb: "/thumbs/wedding1.jpg",
-    zipUrl: "/download/wedding1.zip"
-  },
-  {
-    id: 2,
-    name: "Khung ảnh kỷ yếu",
-    category: "yearbook",
-    thumb: "/thumbs/yearbook1.jpg",
-    zipUrl: "/download/yearbook1.zip"
-  }
-];
+// Cấu trúc thư mục cần có
+// public/
+//   app/
+//     DPLApps/
+//       WeddingPhoto/
+//         stickers/
+//           data.json
+//         template2/
+//           data.json
+//   assets/
+//     thumbnails/
+//     templates/
 
-// Route chính
-app.get('/', (req, res) => {
-  res.json({
-    status: 'success',
-    message: 'HM Photo Collage API đang hoạt động',
-    endpoints: {
-      getTemplates: 'GET /api/templates',
-      downloadTemplate: 'GET /api/download/:id'
-    }
-  });
-});
-
-// API lấy danh sách template
-app.get('/api/templates', (req, res) => {
-  res.json({
-    status: 'success',
-    data: templates
-  });
-});
-
-// API tải template theo ID
-app.get('/api/download/:id', (req, res) => {
+// Route cho sticker data
+app.get('/app/DPLApps/WeddingPhoto/stickers/data.json', (req, res) => {
   try {
-    const template = templates.find(t => t.id === parseInt(req.params.id));
-    
-    if (!template) {
-      return res.status(404).json({
-        status: 'error',
-        message: 'Template không tồn tại'
-      });
-    }
-
-    const filePath = path.join(__dirname, 'public', template.zipUrl);
-    
-    res.download(filePath, `template_${template.id}.zip`, (err) => {
-      if (err) {
-        console.error('Lỗi khi tải file:', err);
-        res.status(500).json({
-          status: 'error',
-          message: 'Lỗi khi tải file'
-        });
-      }
-    });
-  } catch (error) {
-    console.error('Lỗi server:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Lỗi server nội bộ'
-    });
+    const data = fs.readFileSync(
+      path.join(__dirname, 'public', 'app', 'DPLApps', 'WeddingPhoto', 'stickers', 'data.json'),
+      'utf-8'
+    );
+    res.json(JSON.parse(data));
+  } catch (err) {
+    console.error('Error reading stickers data:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
-// Xử lý route không tồn tại
+// Route cho template data
+app.get('/app/DPLApps/WeddingPhoto/template2/data.json', (req, res) => {
+  try {
+    const data = fs.readFileSync(
+      path.join(__dirname, 'public', 'app', 'DPLApps', 'WeddingPhoto', 'template2', 'data.json'),
+      'utf-8'
+    );
+    res.json(JSON.parse(data));
+  } catch (err) {
+    console.error('Error reading template data:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Route mẫu để kiểm tra server hoạt động
+app.get('/', (req, res) => {
+  res.send(`
+    <h1>Wedding Photo Frame Server</h1>
+    <p>Server đang hoạt động</p>
+    <ul>
+      <li><a href="/app/DPLApps/WeddingPhoto/stickers/data.json">Stickers Data</a></li>
+      <li><a href="/app/DPLApps/WeddingPhoto/template2/data.json">Templates Data</a></li>
+    </ul>
+  `);
+});
+
+// Xử lý lỗi 404
 app.use((req, res) => {
-  res.status(404).json({
-    status: 'error',
-    message: 'Endpoint không tồn tại'
-  });
+  res.status(404).json({ error: 'Endpoint not found' });
 });
 
 // Khởi động server
-const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server đang chạy trên port ${PORT}`);
-  console.log(`Truy cập: http://localhost:${PORT}`);
+  console.log(`Server đang chạy tại http://localhost:${PORT}`);
+  console.log(`Các endpoint chính:`);
+  console.log(`- Stickers: http://localhost:${PORT}/app/DPLApps/WeddingPhoto/stickers/data.json`);
+  console.log(`- Templates: http://localhost:${PORT}/app/DPLApps/WeddingPhoto/template2/data.json`);
 });
