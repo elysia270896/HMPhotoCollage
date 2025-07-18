@@ -2,143 +2,168 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
-const fs = require('fs');
+const fs = require('fs').promises;
 const fileUpload = require('express-fileupload');
 
 // Khởi tạo app
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// 1. CẤU HÌNH BẢO MẬT
-// app.use(helmet());
+// 1. CẤU HÌNH BẢO MẬT & MIDDLEWARE
 app.use(cors({
   origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
   methods: ['GET', 'POST']
 }));
 
-// Giới hạn request: 100 requests/phút
-// const limiter = rateLimit({
-//   windowMs: 60 * 1000,
-//   max: 100
-// });
-// app.use(limiter);
-
-// 2. MIDDLEWARE
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload({
   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
   abortOnLimit: true
 }));
-// app.use(morgan('combined'));
 
-// 3. CẤU TRÚC THƯ MỤC
+// 2. CẤU TRÚC THƯ MỤC
 const STATIC_DIR = path.join(__dirname, 'public');
 app.use(express.static(STATIC_DIR));
 
-// 4. API ENDPOINTS
-// 4.1. Health Check
+// 3. API ENDPOINTS
+// 3.1. Health Check
 app.get('/ping', (req, res) => res.json({ status: 'alive', timestamp: Date.now() }));
 
-// 4.2. Validate Data Structure
+// 3.2. Main Template Endpoint
+app.get('/app/DPLApps/WeddingPhoto/template2/data.json', async (req, res) => {
+  try {
+    const filePath = path.join(STATIC_DIR, 'app', 'DPLApps', 'WeddingPhoto', 'template2', 'data.json');
+    const rawData = await fs.readFile(filePath, 'utf-8');
+    const data = JSON.parse(rawData);
+
+    // Validate basic structure
+    if (!data.base || !data.categories || !Array.isArray(data.categories)) {
+      throw new Error('Invalid data structure: missing base or categories');
+    }
+
+    // Process each category and resource
+    const processedData = {
+      base: data.base,
+      categories: data.categories.map(category => {
+        if (!category.category || !category.resource || !Array.isArray(category.resource)) {
+          throw new Error(`Invalid category structure in category ${category.category}`);
+        }
+
+        return {
+          category: category.category,
+          resource: category.resource.map(item => {
+            if (!item.thumb || !item.zip) {
+              throw new Error(`Missing thumb or zip in category ${category.category}`);
+            }
+            
+            // Ensure URLs are complete
+            return {
+              thumb: item.thumb.startsWith('http') ? item.thumb : `${data.base}${item.thumb}`,
+              zip: item.zip.startsWith('http') ? item.zip : `${data.base}${item.zip}`
+            };
+          })
+        };
+      })
+    };
+
+    res.json(processedData);
+  } catch (err) {
+    console.error('[Template Error]', err);
+    res.status(500).json({ 
+      error: 'Internal Server Error',
+      details: process.env.NODE_ENV === 'development' ? err.message : null
+    });
+  }
+});
+
+// 3.3. File Download Endpoint
+app.get('/download/:category/:file(*)', async (req, res) => {
+  try {
+    const { category, file } = req.params;
+    const filePath = path.join(STATIC_DIR, 'app', 'DPLApps', 'WeddingPhoto', 'template2', category, file);
+    
+    // Security check
+    if (!filePath.startsWith(path.join(STATIC_DIR, 'app'))) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // Check file exists
+    try {
+      await fs.access(filePath);
+    } catch {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    res.download(filePath);
+  } catch (err) {
+    console.error('Download error:', err);
+    res.status(500).json({ error: 'Download failed' });
+  }
+});
+
+// 4. VALIDATION ENDPOINT
 app.get('/validate', async (req, res) => {
   try {
-    const [stickers, templates] = await Promise.all([
-      validateData('stickers'),
-      validateData('template2')
-    ]);
-    
-    res.json({
-      valid: stickers.valid && templates.valid,
-      details: { stickers, templates }
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+    const filePath = path.join(STATIC_DIR, 'app', 'DPLApps', 'WeddingPhoto', 'template2', 'data.json');
+    const data = JSON.parse(await fs.readFile(filePath, 'utf-8'));
 
-// 4.3. Main Data Endpoints
-const createDataRoute = (type) => {
-  return async (req, res) => {
-    try {
-      const filePath = path.join(STATIC_DIR, 'app', 'DPLApps', 'WeddingPhoto', type, 'data.json');
-      const data = JSON.parse(await fs.promises.readFile(filePath, 'utf-8'));
-      
-      // Kiểm tra cấu trúc cơ bản
-      if (!data.categories || !Array.isArray(data.categories)) {
-        throw new Error(`Invalid ${type} data structure`);
+    const validationResult = {
+      valid: true,
+      errors: [],
+      categories: data.categories?.length || 0,
+      totalResources: 0
+    };
+
+    // Validate base URL
+    if (!data.base) {
+      validationResult.valid = false;
+      validationResult.errors.push('Missing base URL');
+    }
+
+    // Validate categories
+    if (!data.categories || !Array.isArray(data.categories)) {
+      validationResult.valid = false;
+      validationResult.errors.push('Invalid categories structure');
+      return res.json(validationResult);
+    }
+
+    // Validate each category
+    data.categories.forEach((cat, index) => {
+      if (!cat.category) {
+        validationResult.errors.push(`Category ${index} missing ID`);
+        validationResult.valid = false;
       }
 
-      // Transform data nếu cần
-      if (type === 'template2' && !data.base) {
-        data.base = process.env.BASE_URL || `http://localhost:${PORT}/`;
+      if (!cat.resource || !Array.isArray(cat.resource)) {
+        validationResult.errors.push(`Category ${cat.category || index} has invalid resources`);
+        validationResult.valid = false;
+        return;
       }
 
-      res.json(data);
-    } catch (err) {
-      console.error(`[${type} Error]`, err);
-      res.status(500).json({ 
-        error: 'Internal Server Error',
-        details: process.env.NODE_ENV === 'development' ? err.message : null
+      validationResult.totalResources += cat.resource.length;
+
+      cat.resource.forEach((res, resIndex) => {
+        if (!res.thumb || !res.zip) {
+          validationResult.errors.push(
+            `Category ${cat.category || index}, resource ${resIndex} missing thumb or zip`
+          );
+          validationResult.valid = false;
+        }
       });
-    }
-  }
-};
-
-app.get('/app/DPLApps/WeddingPhoto/stickers/data.json', createDataRoute('stickers'));
-app.get('/app/DPLApps/WeddingPhoto/template2/data.json', createDataRoute('template2'));
-
-// 4.4. File Download
-app.get('/download/:type/:file(*)', (req, res) => {
-  const { type, file } = req.params;
-  const allowedTypes = ['stickers', 'template2'];
-  
-  if (!allowedTypes.includes(type)) {
-    return res.status(400).json({ error: 'Invalid download type' });
-  }
-
-  const filePath = path.join(STATIC_DIR, 'app', 'DPLApps', 'WeddingPhoto', type, file);
-  
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).json({ error: 'File not found' });
-  }
-
-  res.download(filePath, err => {
-    if (err) console.error('Download failed:', err);
-  });
-});
-
-// 5. UPLOAD ENDPOINT (Dành cho admin)
-app.post('/upload', (req, res) => {
-  if (!req.files || !req.body.targetDir) {
-    return res.status(400).json({ error: 'Missing file or target directory' });
-  }
-
-  const targetDir = path.join(STATIC_DIR, req.body.targetDir);
-  if (!targetDir.startsWith(STATIC_DIR)) {
-    return res.status(403).json({ error: 'Invalid upload path' });
-  }
-
-  if (!fs.existsSync(targetDir)) {
-    fs.mkdirSync(targetDir, { recursive: true });
-  }
-
-  const uploadFile = req.files.file;
-  const savePath = path.join(targetDir, uploadFile.name);
-
-  uploadFile.mv(savePath, err => {
-    if (err) {
-      console.error('Upload failed:', err);
-      return res.status(500).json({ error: 'File upload failed' });
-    }
-    res.json({ 
-      success: true,
-      path: savePath.replace(STATIC_DIR, '')
     });
-  });
+
+    res.json(validationResult);
+  } catch (err) {
+    console.error('Validation error:', err);
+    res.status(500).json({ 
+      error: 'Validation failed',
+      details: err.message
+    });
+  }
 });
 
-// 6. XỬ LÝ LỖI
+// 5. ERROR HANDLING
 app.use((req, res) => {
   res.status(404).json({ error: 'Endpoint not found' });
 });
@@ -147,55 +172,12 @@ app.use((err, req, res, next) => {
   console.error('Server Error:', err);
   res.status(500).json({ 
     error: 'Internal Server Error',
-    requestId: req.id
+    details: process.env.NODE_ENV === 'development' ? err.message : null
   });
 });
 
-// 7. HÀM HỖ TRỢ
-async function validateData(type) {
-  const filePath = path.join(STATIC_DIR, 'app', 'DPLApps', 'WeddingPhoto', type, 'data.json');
-  const data = JSON.parse(await fs.promises.readFile(filePath, 'utf-8'));
-
-  const result = {
-    valid: true,
-    type,
-    errors: [],
-    categories: data.categories?.length || 0,
-    resources: 0
-  };
-
-  // Validate stickers
-  if (type === 'stickers') {
-    data.categories?.forEach((cat, i) => {
-      if (!cat.resource?.length) {
-        result.errors.push(`Category ${i} has no resources`);
-        result.valid = false;
-      } else {
-        cat.resource.forEach(res => {
-          if (!res.thumb || !res.zip) {
-            result.errors.push(`Missing thumb/zip in category ${i}`);
-            result.valid = false;
-          }
-        });
-        result.resources += cat.resource.length;
-      }
-    });
-  }
-
-  // Validate templates
-  if (type === 'template2') {
-    if (!data.base) result.errors.push('Missing base URL');
-    // Thêm validate tương tự stickers...
-  }
-
-  return result;
-}
-
-// 8. KHỞI ĐỘNG SERVER
+// 6. START SERVER
 app.listen(PORT, () => {
-  console.log(`🚀 Server running at ${process.env.BASE_URL || `http://localhost:${PORT}`}`);
-  console.log('📌 Important Endpoints:');
-  console.log(`- Stickers: ${process.env.BASE_URL}/app/DPLApps/WeddingPhoto/stickers/data.json`);
-  console.log(`- Templates: ${process.env.BASE_URL}/app/DPLApps/WeddingPhoto/template2/data.json`);
-  console.log(`- Validation: ${process.env.BASE_URL}/validate`);
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🌐 Access template data at: http://localhost:${PORT}/app/DPLApps/WeddingPhoto/template2/data.json`);
 });
