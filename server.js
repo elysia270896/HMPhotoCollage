@@ -5,26 +5,26 @@ const cors = require('cors');
 const fs = require('fs');
 const fileUpload = require('express-fileupload');
 // const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
-const helmet = require('helmet');
+// const rateLimit = require('express-rate-limit');
+// const helmet = require('helmet');
 
 // Khởi tạo app
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // 1. CẤU HÌNH BẢO MẬT
-app.use(helmet());
+// app.use(helmet());
 app.use(cors({
   origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
   methods: ['GET', 'POST']
 }));
 
 // Giới hạn request: 100 requests/phút
-const limiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 100
-});
-app.use(limiter);
+// const limiter = rateLimit({
+//   windowMs: 60 * 1000,
+//   max: 100
+// });
+// app.use(limiter);
 
 // 2. MIDDLEWARE
 app.use(express.json({ limit: '50mb' }));
