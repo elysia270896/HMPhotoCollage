@@ -5,12 +5,20 @@
       "category": "1",
       "resource": [
         {
-          "thumb": "/1/thumb_1_1.webp",
+          "thumb":"/1/thumb_1_1.webp",
           "zip": "/1/frame_1.zip"
         },
         {
-          "thumb": "/1/thumb_1_2.webp",
+          "thumb":"/1/thumb_1_2.webp",
           "zip": "/1/frame_2.zip"
+        },
+        {
+          "thumb":"/1/thumb_1_3.webp",
+          "zip": "/1/frame_3.zip"
+        },
+        {
+          "thumb":"/1/thumb_1_4.webp",
+          "zip": "/1/frame_4.zip"
         }
                
       ]
@@ -19,12 +27,21 @@
       "category": "2",
       "resource": [
         {
-          "thumb": "/2/thumb_2_1.webp",
+          "thumb":"/2/thumb_2_1.webp",
           "zip": "/2/frame_1.zip"
         },
         {
-          "thumb": "/2/thumb_2_2.webp",
+          "thumb":"/2/thumb_2_2.webp",
           "zip": "/2/frame_2.zip"
+        },
+
+        {
+          "thumb":"/2/thumb_2_3.webp",
+          "zip": "/2/frame_3.zip"
+        },
+        {
+          "thumb":"/2/thumb_2_4.webp",
+          "zip": "/2/frame_4.zip"
         }
         
       ]
