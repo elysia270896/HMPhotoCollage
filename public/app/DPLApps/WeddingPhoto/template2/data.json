@@ -1,16 +1,16 @@
 {
-  "base": "https://hmphotocollage-5.onrender.com",
+  "base": "https://hmphotocollage-5.onrender.com/app/DPLApps/WeddingPhoto/template2",
   "categories": [
     {
       "category": "1",
       "resource": [
         {
-          "thumb": "/app/DPLApps/WeddingPhoto/template2/1/thumb_1_1.webp",
-          "zip": "/app/DPLApps/WeddingPhoto/template2/1/frame_1.zip"
+          "thumb": "/1/thumb_1_1.webp",
+          "zip": "/1/frame_1.zip"
         },
         {
-          "thumb": "/app/DPLApps/WeddingPhoto/template2/1/thumb_1_2.webp",
-          "zip": "/app/DPLApps/WeddingPhoto/template2/1/frame_2.zip"
+          "thumb": "/1/thumb_1_2.webp",
+          "zip": "/1/frame_2.zip"
         }
                
       ]
@@ -19,12 +19,12 @@
       "category": "2",
       "resource": [
         {
-          "thumb": "/app/DPLApps/WeddingPhoto/template2/2/thumb_2_1.webp",
-          "zip": "/app/DPLApps/WeddingPhoto/template2/2/frame_1.zip"
+          "thumb": "/2/thumb_2_1.webp",
+          "zip": "/2/frame_1.zip"
         },
         {
-          "thumb": "/app/DPLApps/WeddingPhoto/template2/2/thumb_2_2.webp",
-          "zip": "/app/DPLApps/WeddingPhoto/template2/2/frame_2.zip"
+          "thumb": "/2/thumb_2_2.webp",
+          "zip": "/2/frame_2.zip"
         }
         
       ]
