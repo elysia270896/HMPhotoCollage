@@ -1,26 +1,18 @@
 {
-  "categories": [
-    {
-      "category": "1",
-      "resource": [
+        "base": "https://hmphotocollage-5.onrender.com/app/DPLApps/WeddingPhoto/stickers",
+        "stickers": [
         {
-          "thumb": "assets/stickers/love/thumb.jpg",
-          "zip": "assets/stickers/love/pack.zip"
+        "name": "Comic",
+        "package": "/comic/package.zip",
+        "thumb":"/comic/thumb.webp",
+        "banner":"/comic/banner.webp"
         },
         {
-          "thumb": "assets/stickers/heart/thumb.jpg",
-          "zip": "assets/stickers/heart/pack.zip"
+        "name": "Couple",
+        "package": "/couple/package.zip",
+        "thumb":"/couple/thumb.webp",
+        "banner":"/couple/banner.webp"
         }
-      ]
-    },
-    {
-      "category": "2",
-      "resource": [
-        {
-          "thumb": "assets/stickers/flower/thumb.jpg",
-          "zip": "assets/stickers/flower/pack.zip"
-        }
-      ]
-    }
-  ]
+        
+    ]
 }
